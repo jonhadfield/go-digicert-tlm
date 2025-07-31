@@ -12,33 +12,33 @@ type EnrollmentsService struct {
 }
 
 type Enrollment struct {
-	ID                 string                 `json:"id,omitempty"`
-	EnrollmentCode     string                 `json:"enrollment_code,omitempty"`
-	Status             string                 `json:"status,omitempty"`
-	ProfileID          string                 `json:"profile_id,omitempty"`
-	ProfileName        string                 `json:"profile_name,omitempty"`
-	SeatID             string                 `json:"seat_id,omitempty"`
-	CertificateID      string                 `json:"certificate_id,omitempty"`
-	CommonName         string                 `json:"common_name,omitempty"`
-	Email              string                 `json:"email,omitempty"`
-	PhoneNumber        string                 `json:"phone_number,omitempty"`
-	ExpirationDate     *time.Time             `json:"expiration_date,omitempty"`
-	CreatedAt          *time.Time             `json:"created_at,omitempty"`
-	UpdatedAt          *time.Time             `json:"updated_at,omitempty"`
-	Tags               []string               `json:"tags,omitempty"`
-	CustomAttributes   map[string]interface{} `json:"custom_attributes,omitempty"`
+	ID               string                 `json:"id,omitempty"`
+	EnrollmentCode   string                 `json:"enrollment_code,omitempty"`
+	Status           string                 `json:"status,omitempty"`
+	ProfileID        string                 `json:"profile_id,omitempty"`
+	ProfileName      string                 `json:"profile_name,omitempty"`
+	SeatID           string                 `json:"seat_id,omitempty"`
+	CertificateID    string                 `json:"certificate_id,omitempty"`
+	CommonName       string                 `json:"common_name,omitempty"`
+	Email            string                 `json:"email,omitempty"`
+	PhoneNumber      string                 `json:"phone_number,omitempty"`
+	ExpirationDate   *time.Time             `json:"expiration_date,omitempty"`
+	CreatedAt        *time.Time             `json:"created_at,omitempty"`
+	UpdatedAt        *time.Time             `json:"updated_at,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	CustomAttributes map[string]interface{} `json:"custom_attributes,omitempty"`
 }
 
 type EnrollmentRequest struct {
-	Profile          ProfileReference        `json:"profile"`
-	Seat             *SeatReference          `json:"seat,omitempty"`
-	Validity         *Validity               `json:"validity,omitempty"`
-	Email            string                  `json:"email,omitempty"`
-	PhoneNumber      string                  `json:"phone_number,omitempty"`
-	CommonName       string                  `json:"common_name,omitempty"`
-	Attributes       *EnrollmentAttributes   `json:"attributes,omitempty"`
-	Tags             []string                `json:"tags,omitempty"`
-	CustomAttributes []CustomAttribute       `json:"custom_attributes,omitempty"`
+	Profile            ProfileReference      `json:"profile"`
+	Seat               *SeatReference        `json:"seat,omitempty"`
+	Validity           *Validity             `json:"validity,omitempty"`
+	Email              string                `json:"email,omitempty"`
+	PhoneNumber        string                `json:"phone_number,omitempty"`
+	CommonName         string                `json:"common_name,omitempty"`
+	Attributes         *EnrollmentAttributes `json:"attributes,omitempty"`
+	Tags               []string              `json:"tags,omitempty"`
+	CustomAttributes   []CustomAttribute     `json:"custom_attributes,omitempty"`
 	NotificationEmails []string              `json:"notification_emails,omitempty"`
 }
 
@@ -61,10 +61,10 @@ type EnrollmentResponse struct {
 }
 
 type EnrollmentStatusResponse struct {
-	Status         string     `json:"status"`
-	CertificateID  string     `json:"certificate_id,omitempty"`
-	Message        string     `json:"message,omitempty"`
-	LastUpdated    *time.Time `json:"last_updated,omitempty"`
+	Status        string     `json:"status"`
+	CertificateID string     `json:"certificate_id,omitempty"`
+	Message       string     `json:"message,omitempty"`
+	LastUpdated   *time.Time `json:"last_updated,omitempty"`
 }
 
 type RedeemEnrollmentRequest struct {
@@ -73,18 +73,18 @@ type RedeemEnrollmentRequest struct {
 }
 
 type ManualEnrollmentRequest struct {
-	Profile          ProfileReference        `json:"profile"`
-	Seat             *SeatReference          `json:"seat,omitempty"`
-	CSR              string                  `json:"csr"`
-	Validity         *Validity               `json:"validity,omitempty"`
-	DeliveryFormat   *DeliveryFormat         `json:"delivery_format,omitempty"`
-	IncludeCAChain   bool                    `json:"include_ca_chain,omitempty"`
-	Attributes       *CertificateAttributes  `json:"attributes,omitempty"`
-	Tags             []string                `json:"tags,omitempty"`
-	CertOwnerIDs     []string                `json:"cert_owner_ids,omitempty"`
-	CustomAttributes []CustomAttribute       `json:"custom_attributes,omitempty"`
-	ApproverEmail    string                  `json:"approver_email,omitempty"`
-	Comments         string                  `json:"comments,omitempty"`
+	Profile          ProfileReference       `json:"profile"`
+	Seat             *SeatReference         `json:"seat,omitempty"`
+	CSR              string                 `json:"csr"`
+	Validity         *Validity              `json:"validity,omitempty"`
+	DeliveryFormat   *DeliveryFormat        `json:"delivery_format,omitempty"`
+	IncludeCAChain   bool                   `json:"include_ca_chain,omitempty"`
+	Attributes       *CertificateAttributes `json:"attributes,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	CertOwnerIDs     []string               `json:"cert_owner_ids,omitempty"`
+	CustomAttributes []CustomAttribute      `json:"custom_attributes,omitempty"`
+	ApproverEmail    string                 `json:"approver_email,omitempty"`
+	Comments         string                 `json:"comments,omitempty"`
 }
 
 type EnrollmentDetailsOptions struct {
@@ -226,11 +226,9 @@ func (s *EnrollmentsService) ListDetails(ctx context.Context, opts *EnrollmentDe
 		if opts.ProfileID != "" {
 			q.Add("profile_id", opts.ProfileID)
 		}
-		if opts.Page > 0 {
-			q.Add("page", fmt.Sprintf("%d", opts.Page))
-		}
-		if opts.PageSize > 0 {
-			q.Add("page_size", fmt.Sprintf("%d", opts.PageSize))
+		if opts.Offset > 0 && opts.Limit > 0 {
+			q.Add("offset", fmt.Sprintf("%d", opts.Offset))
+			q.Add("limit", fmt.Sprintf("%d", opts.Limit))
 		}
 		if opts.SortBy != "" {
 			q.Add("sort_by", opts.SortBy)

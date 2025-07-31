@@ -203,13 +203,12 @@ type Response struct {
 }
 
 type PaginationParams struct {
-	Page     int `url:"page,omitempty"`
-	PageSize int `url:"page_size,omitempty"`
+	Offset int `url:"offset,omitempty"`
+	Limit  int `url:"limit,omitempty"`
 }
 
 type ListResponse struct {
-	Page       int `json:"page"`
-	PageSize   int `json:"page_size"`
-	TotalCount int `json:"total_count"`
-	TotalPages int `json:"total_pages"`
+	Total  int `json:"total"`
+	Offset int `json:"offset"`
+	Limit  int `json:"limit"`
 }

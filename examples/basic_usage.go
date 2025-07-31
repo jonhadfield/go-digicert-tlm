@@ -27,7 +27,7 @@ func main() {
 	// Example 1: List certificate profiles
 	fmt.Println("=== Listing Certificate Profiles ===")
 	profileOpts := &digicert.ProfileListOptions{}
-	profileOpts.PageSize = 10
+	profileOpts.Limit = 10
 	profiles, _, err := client.Profiles.List(ctx, profileOpts)
 	if err != nil {
 		log.Printf("Error listing profiles: %v", err)
@@ -42,12 +42,12 @@ func main() {
 	certOpts := &digicert.CertificateSearchOptions{
 		Status: "active",
 	}
-	certOpts.PageSize = 5
+	certOpts.Limit = 5
 	certs, _, err := client.Certificates.Search(ctx, certOpts)
 	if err != nil {
 		log.Printf("Error searching certificates: %v", err)
 	} else {
-		fmt.Printf("Found %d certificates (showing first %d)\n", certs.TotalCount, len(certs.Items))
+		fmt.Printf("Found %d certificates (showing first %d)\n", certs.Total, len(certs.Items))
 		for _, cert := range certs.Items {
 			fmt.Printf("- %s (Serial: %s, Expires: %v)\n", 
 				cert.CommonName, cert.SerialNumber, cert.ValidTo)
@@ -91,7 +91,7 @@ func main() {
 	// Example 4: List business units
 	fmt.Println("\n=== Listing Business Units ===")
 	buOpts := &digicert.BusinessUnitListOptions{}
-	buOpts.PageSize = 5
+	buOpts.Limit = 5
 	businessUnits, _, err := client.BusinessUnits.List(ctx, buOpts)
 	if err != nil {
 		log.Printf("Error listing business units: %v", err)

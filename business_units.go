@@ -12,19 +12,19 @@ type BusinessUnitsService struct {
 }
 
 type BusinessUnit struct {
-	ID                string                 `json:"id,omitempty"`
-	Name              string                 `json:"name,omitempty"`
-	Description       string                 `json:"description,omitempty"`
-	ParentID          string                 `json:"parent_id,omitempty"`
-	AccountID         string                 `json:"account_id,omitempty"`
-	IsActive          bool                   `json:"is_active,omitempty"`
-	LicensedSeats     int                    `json:"licensed_seats,omitempty"`
-	UsedSeats         int                    `json:"used_seats,omitempty"`
-	AvailableSeats    int                    `json:"available_seats,omitempty"`
-	Tags              []string               `json:"tags,omitempty"`
-	CustomAttributes  map[string]interface{} `json:"custom_attributes,omitempty"`
-	CreatedAt         *time.Time             `json:"created_at,omitempty"`
-	UpdatedAt         *time.Time             `json:"updated_at,omitempty"`
+	ID               string                 `json:"id,omitempty"`
+	Name             string                 `json:"name,omitempty"`
+	Description      string                 `json:"description,omitempty"`
+	ParentID         string                 `json:"parent_id,omitempty"`
+	AccountID        string                 `json:"account_id,omitempty"`
+	IsActive         bool                   `json:"is_active,omitempty"`
+	LicensedSeats    int                    `json:"licensed_seats,omitempty"`
+	UsedSeats        int                    `json:"used_seats,omitempty"`
+	AvailableSeats   int                    `json:"available_seats,omitempty"`
+	Tags             []string               `json:"tags,omitempty"`
+	CustomAttributes map[string]interface{} `json:"custom_attributes,omitempty"`
+	CreatedAt        *time.Time             `json:"created_at,omitempty"`
+	UpdatedAt        *time.Time             `json:"updated_at,omitempty"`
 }
 
 type BusinessUnitRequest struct {
@@ -36,35 +36,35 @@ type BusinessUnitRequest struct {
 }
 
 type BusinessUnitAdmin struct {
-	ID               string     `json:"id,omitempty"`
-	Email            string     `json:"email,omitempty"`
-	FirstName        string     `json:"first_name,omitempty"`
-	LastName         string     `json:"last_name,omitempty"`
-	Role             string     `json:"role,omitempty"`
-	IsActive         bool       `json:"is_active,omitempty"`
-	CreatedAt        *time.Time `json:"created_at,omitempty"`
+	ID        string     `json:"id,omitempty"`
+	Email     string     `json:"email,omitempty"`
+	FirstName string     `json:"first_name,omitempty"`
+	LastName  string     `json:"last_name,omitempty"`
+	Role      string     `json:"role,omitempty"`
+	IsActive  bool       `json:"is_active,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 }
 
 type BusinessUnitAdminRequest struct {
-	Email     string   `json:"email"`
-	FirstName string   `json:"first_name"`
-	LastName  string   `json:"last_name"`
-	Role      string   `json:"role"`
+	Email       string   `json:"email"`
+	FirstName   string   `json:"first_name"`
+	LastName    string   `json:"last_name"`
+	Role        string   `json:"role"`
 	Permissions []string `json:"permissions,omitempty"`
 }
 
 type LicensedSeats struct {
-	TotalSeats     int                       `json:"total_seats"`
-	UsedSeats      int                       `json:"used_seats"`
-	AvailableSeats int                       `json:"available_seats"`
-	SeatTypes      []SeatTypeAllocation      `json:"seat_types,omitempty"`
+	TotalSeats     int                  `json:"total_seats"`
+	UsedSeats      int                  `json:"used_seats"`
+	AvailableSeats int                  `json:"available_seats"`
+	SeatTypes      []SeatTypeAllocation `json:"seat_types,omitempty"`
 }
 
 type SeatTypeAllocation struct {
-	Type           string `json:"type"`
-	Total          int    `json:"total"`
-	Used           int    `json:"used"`
-	Available      int    `json:"available"`
+	Type      string `json:"type"`
+	Total     int    `json:"total"`
+	Used      int    `json:"used"`
+	Available int    `json:"available"`
 }
 
 type BusinessUnitListOptions struct {
@@ -169,11 +169,9 @@ func (s *BusinessUnitsService) List(ctx context.Context, opts *BusinessUnitListO
 		if opts.IsActive != nil {
 			q.Add("is_active", fmt.Sprintf("%t", *opts.IsActive))
 		}
-		if opts.Page > 0 {
-			q.Add("page", fmt.Sprintf("%d", opts.Page))
-		}
-		if opts.PageSize > 0 {
-			q.Add("page_size", fmt.Sprintf("%d", opts.PageSize))
+		if opts.Offset > 0 && opts.Limit > 0 {
+			q.Add("offset", fmt.Sprintf("%d", opts.Offset))
+			q.Add("limit", fmt.Sprintf("%d", opts.Limit))
 		}
 		if opts.SortBy != "" {
 			q.Add("sort_by", opts.SortBy)

@@ -141,11 +141,9 @@ func (s *CertificateOwnersService) List(ctx context.Context, opts *CertificateOw
 		if opts.IsActive != nil {
 			q.Add("is_active", fmt.Sprintf("%t", *opts.IsActive))
 		}
-		if opts.Page > 0 {
-			q.Add("page", fmt.Sprintf("%d", opts.Page))
-		}
-		if opts.PageSize > 0 {
-			q.Add("page_size", fmt.Sprintf("%d", opts.PageSize))
+		if opts.Offset > 0 && opts.Limit > 0 {
+			q.Add("offset", fmt.Sprintf("%d", opts.Offset))
+			q.Add("limit", fmt.Sprintf("%d", opts.Limit))
 		}
 		if opts.SortBy != "" {
 			q.Add("sort_by", opts.SortBy)

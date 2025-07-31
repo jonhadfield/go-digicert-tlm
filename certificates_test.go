@@ -110,10 +110,9 @@ func TestCertificatesService_Search(t *testing.T) {
 	t.Run("successful search with pagination", func(t *testing.T) {
 		mockResponse := &CertificateSearchResponse{
 			ListResponse: ListResponse{
-				TotalCount: 100,
-				Page:       1,
-				PageSize:   20,
-				TotalPages: 5,
+				Total:  100,
+				Offset: 0,
+				Limit:  0, // No limit sent when offset is 0
 			},
 			Items: []Certificate{
 				{
@@ -151,11 +150,12 @@ func TestCertificatesService_Search(t *testing.T) {
 			if q.Get("status") != "issued" {
 				t.Errorf("Expected status=issued, got %s", q.Get("status"))
 			}
-			if q.Get("page") != "1" {
-				t.Errorf("Expected page=1, got %s", q.Get("page"))
+			// Neither offset nor limit should be present when offset is 0 (consistent pagination logic)
+			if q.Has("offset") {
+				t.Errorf("offset parameter should not be present when value is 0, but got %s", q.Get("offset"))
 			}
-			if q.Get("page_size") != "20" {
-				t.Errorf("Expected page_size=20, got %s", q.Get("page_size"))
+			if q.Has("limit") {
+				t.Errorf("limit parameter should not be present when offset is 0")
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -168,8 +168,8 @@ func TestCertificatesService_Search(t *testing.T) {
 
 		opts := &CertificateSearchOptions{
 			PaginationParams: PaginationParams{
-				Page:     1,
-				PageSize: 20,
+				Offset: 0, // Will not be added to query since it's 0
+				Limit:  20,
 			},
 			CommonName: "example.com",
 			Status:     "issued",
@@ -184,8 +184,8 @@ func TestCertificatesService_Search(t *testing.T) {
 			t.Errorf("StatusCode = %v, want %v", resp.StatusCode, http.StatusOK)
 		}
 
-		if result.TotalCount != mockResponse.TotalCount {
-			t.Errorf("TotalCount = %v, want %v", result.TotalCount, mockResponse.TotalCount)
+		if result.Total != mockResponse.Total {
+			t.Errorf("Total = %v, want %v", result.Total, mockResponse.Total)
 		}
 
 		if len(result.Items) != len(mockResponse.Items) {
@@ -225,7 +225,7 @@ func TestCertificatesService_Search(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(&CertificateSearchResponse{
-				ListResponse: ListResponse{TotalCount: 1, Page: 1, PageSize: 20, TotalPages: 1},
+				ListResponse: ListResponse{Total: 1, Offset: 0, Limit: 20},
 				Items:        []Certificate{},
 			})
 		}))
@@ -602,19 +602,18 @@ func TestCertificateSearchPagination(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			q := r.URL.Query()
 			
-			if q.Get("page") != "2" {
-				t.Errorf("Expected page=2, got %s", q.Get("page"))
+			if q.Get("offset") != "50" {
+				t.Errorf("Expected offset=50, got %s", q.Get("offset"))
 			}
-			if q.Get("page_size") != "50" {
-				t.Errorf("Expected page_size=50, got %s", q.Get("page_size"))
+			if q.Get("limit") != "50" {
+				t.Errorf("Expected limit=50, got %s", q.Get("limit"))
 			}
 
 			mockResponse := &CertificateSearchResponse{
 				ListResponse: ListResponse{
-					TotalCount: 150,
-					Page:       2,
-					PageSize:   50,
-					TotalPages: 3,
+					Total:  150,
+					Offset: 50,
+					Limit:  50,
 				},
 				Items: make([]Certificate, 50), // Simulate 50 certificates
 			}
@@ -629,8 +628,8 @@ func TestCertificateSearchPagination(t *testing.T) {
 
 		opts := &CertificateSearchOptions{
 			PaginationParams: PaginationParams{
-				Page:     2,
-				PageSize: 50,
+				Offset: 50,
+				Limit:  50,
 			},
 		}
 
@@ -639,16 +638,109 @@ func TestCertificateSearchPagination(t *testing.T) {
 			t.Fatalf("Search() error = %v", err)
 		}
 
-		if result.TotalCount != 150 {
-			t.Errorf("TotalCount = %v, want %v", result.TotalCount, 150)
+		if result.Total != 150 {
+			t.Errorf("Total = %v, want %v", result.Total, 150)
 		}
 
-		if result.Page != 2 {
-			t.Errorf("Page = %v, want %v", result.Page, 2)
+		if result.Offset != 50 {
+			t.Errorf("Offset = %v, want %v", result.Offset, 50)
 		}
 
 		if len(result.Items) != 50 {
 			t.Errorf("Items count = %v, want %v", len(result.Items), 50)
+		}
+	})
+
+	t.Run("offset and limit not added when zero", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			q := r.URL.Query()
+			
+			// Verify offset and limit are not in query params when they are 0
+			if q.Has("offset") {
+				t.Errorf("offset parameter should not be present when value is 0")
+			}
+			if q.Has("limit") {
+				t.Errorf("limit parameter should not be present when value is 0")
+			}
+
+			mockResponse := &CertificateSearchResponse{
+				ListResponse: ListResponse{
+					Total:  10,
+					Offset: 0,
+					Limit:  0,
+				},
+				Items: make([]Certificate, 10),
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(mockResponse)
+		}))
+		defer server.Close()
+
+		client.BaseURL, _ = client.BaseURL.Parse(server.URL + "/")
+
+		opts := &CertificateSearchOptions{
+			PaginationParams: PaginationParams{
+				Offset: 0, // Should not be added to query
+				Limit:  0, // Should not be added to query
+			},
+			CommonName: "test.example.com",
+		}
+
+		_, _, err := client.Certificates.Search(ctx, opts)
+		if err != nil {
+			t.Fatalf("Search() error = %v", err)
+		}
+	})
+
+	t.Run("offset and limit added when greater than zero", func(t *testing.T) {
+		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			q := r.URL.Query()
+			
+			// Verify both offset and limit are present when > 0
+			if q.Get("offset") != "10" {
+				t.Errorf("Expected offset=10, got %s", q.Get("offset"))
+			}
+			if q.Get("limit") != "25" {
+				t.Errorf("Expected limit=25, got %s", q.Get("limit"))
+			}
+
+			mockResponse := &CertificateSearchResponse{
+				ListResponse: ListResponse{
+					Total:  100,
+					Offset: 10,
+					Limit:  25,
+				},
+				Items: make([]Certificate, 25),
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(mockResponse)
+		}))
+		defer server.Close()
+
+		client.BaseURL, _ = client.BaseURL.Parse(server.URL + "/")
+
+		opts := &CertificateSearchOptions{
+			PaginationParams: PaginationParams{
+				Offset: 10, // Should be added to query
+				Limit:  25, // Should be added to query
+			},
+		}
+
+		result, _, err := client.Certificates.Search(ctx, opts)
+		if err != nil {
+			t.Fatalf("Search() error = %v", err)
+		}
+
+		if result.Offset != 10 {
+			t.Errorf("Offset = %v, want %v", result.Offset, 10)
+		}
+
+		if result.Limit != 25 {
+			t.Errorf("Limit = %v, want %v", result.Limit, 25)
 		}
 	})
 }
