@@ -260,7 +260,6 @@ func (s *CertificatesService) Search(ctx context.Context, opts *CertificateSearc
 		httpReq.URL.RawQuery = q.Encode()
 	}
 
-	fmt.Println(httpReq.URL.String())
 	var result CertificateSearchResponse
 	resp, err := s.client.Do(ctx, httpReq, &result)
 	if err != nil {
