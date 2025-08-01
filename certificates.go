@@ -251,13 +251,16 @@ func (s *CertificatesService) Search(ctx context.Context, opts *CertificateSearc
 		for _, tag := range opts.Tags {
 			q.Add("tags", tag)
 		}
-		if opts.Offset > 0 && opts.Limit > 0 {
+		if opts.Offset > 0 {
 			q.Add("offset", fmt.Sprintf("%d", opts.Offset))
+		}
+		if opts.Limit > 0 {
 			q.Add("limit", fmt.Sprintf("%d", opts.Limit))
 		}
 		httpReq.URL.RawQuery = q.Encode()
 	}
 
+	fmt.Println(httpReq.URL.String())
 	var result CertificateSearchResponse
 	resp, err := s.client.Do(ctx, httpReq, &result)
 	if err != nil {
